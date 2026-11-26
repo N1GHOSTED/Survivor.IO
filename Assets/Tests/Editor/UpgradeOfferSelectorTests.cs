@@ -6,6 +6,16 @@ using SurvivorIO.UpgradeFlow;
 public class UpgradeOfferSelectorTests
 {
     [Test]
+    public void OneShotGateAllowsOnlyOneAcquisition()
+    {
+        var gate = new OneShotGate();
+
+        Assert.That(gate.TryAcquire(), Is.True);
+        Assert.That(gate.TryAcquire(), Is.False);
+        Assert.That(gate.TryAcquire(), Is.False);
+    }
+
+    [Test]
     public void SelectDistinctReturnsUniqueCandidatesUpToRequestedCount()
     {
         var candidates = new List<int> { 1, 2, 2, 3 };

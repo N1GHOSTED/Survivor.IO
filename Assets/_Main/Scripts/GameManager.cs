@@ -86,6 +86,7 @@ public class GameManager : MonoBehaviour
     internal bool SetActiveAll = true;
     internal bool PlayerDeath = false;
     internal bool Checkenemys = false;
+    private bool LevelUpDisabledSpawner = false;
 
     void Start()
     {
@@ -155,7 +156,11 @@ public class GameManager : MonoBehaviour
                     PlayerPerfb.GetComponent<Rigidbody2D>().simulated = false;
                     if (EnemyAvailable == true)
                     {
-                        Spawner.enabled = false;
+                        if (Spawner.enabled)
+                        {
+                            LevelUpDisabledSpawner = true;
+                            Spawner.enabled = false;
+                        }
                         startmove = true;
                     }
                     ValureLevel = 0f;
@@ -266,6 +271,7 @@ public class GameManager : MonoBehaviour
     }
     public void FirstCont()
     {
+        RestoreLevelUpSpawner();
         ScreenAddonWap.SetActive(false);
         Times.timerIsRunning = true;
         PlayerPerfb.GetComponent<PlayerManager>().enabled = true;
@@ -284,6 +290,7 @@ public class GameManager : MonoBehaviour
     }
     public void SecondCont()
     {
+        RestoreLevelUpSpawner();
         ScreenAddonWap.SetActive(false);
         Times.timerIsRunning = true;
         PlayerPerfb.GetComponent<PlayerManager>().enabled = true;
@@ -302,11 +309,11 @@ public class GameManager : MonoBehaviour
     }
     public void ThirdCont()
     {
+        RestoreLevelUpSpawner();
         ScreenAddonWap.SetActive(false);
         Times.timerIsRunning = true;
         PlayerPerfb.GetComponent<PlayerManager>().enabled = true;
         PlayerPerfb.GetComponent<Rigidbody2D>().simulated = true;
-        //Spawner.enabled = true;
         if (EnemyAvailable == true)
         {
             startmove = false;
@@ -318,6 +325,15 @@ public class GameManager : MonoBehaviour
         }
         ScoringLevel.fillAmount = 0;
         StartCoroutine(CheckingFinishBtn());
+    }
+
+    void RestoreLevelUpSpawner()
+    {
+        if (LevelUpDisabledSpawner)
+        {
+            Spawner.enabled = true;
+            LevelUpDisabledSpawner = false;
+        }
     }
 
     IEnumerator CheckingFinishBtn()

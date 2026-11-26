@@ -3,6 +3,22 @@ using System.Collections.Generic;
 
 namespace SurvivorIO.UpgradeFlow
 {
+    public sealed class OneShotGate
+    {
+        private bool acquired;
+
+        public bool TryAcquire()
+        {
+            if (acquired)
+            {
+                return false;
+            }
+
+            acquired = true;
+            return true;
+        }
+    }
+
     public static class UpgradeOfferSelector
     {
         public static List<int> SelectDistinct(IList<int> candidates, int count, Random random)

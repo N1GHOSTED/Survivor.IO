@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SurvivorIO.UpgradeFlow;
 
 public class CoinsManager : MonoBehaviour
 {
@@ -10,6 +11,7 @@ public class CoinsManager : MonoBehaviour
     private AudioSource Effect;
     internal bool MoveOn = false;
     public bool WorkOn = true;
+    private readonly OneShotGate CollectionGate = new OneShotGate();
     void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player");
@@ -50,13 +52,15 @@ public class CoinsManager : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.CompareTag("Player"))
+        if (!other.CompareTag("Player") || !CollectionGate.TryAcquire())
         {
-            StartCoroutine(FollowPlayer());
-            UIManager.GetComponent<ManagerMecanique>().CoinsInt += 1;
-            Manager.GetComponent<GameManager>().CurrentCurrency += 1;
-            PlayerPrefs.SetInt("coins" , UIManager.GetComponent<ManagerMecanique>().CoinsInt);
-            StartCoroutine(FlashingLed());
+            return;
         }
+
+        StartCoroutine(FollowPlayer());
+        UIManager.GetComponent<ManagerMecanique>().CoinsInt += 1;
+        Manager.GetComponent<GameManager>().CurrentCurrency += 1;
+        PlayerPrefs.SetInt("coins" , UIManager.GetComponent<ManagerMecanique>().CoinsInt);
+        StartCoroutine(FlashingLed());
     }
 }
