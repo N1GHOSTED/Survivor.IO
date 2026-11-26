@@ -56,6 +56,9 @@ public class GameManager : MonoBehaviour
     public float SpeedEnemy;
     internal float Valeur;
     internal float ValureLevel;
+    internal float MaxHealth = 100f;
+    internal float FireRateMultiplier = 1f;
+    internal const float MaxFireRateMultiplier = 3f;
     public float LerpTime = 0.1f;
     internal float t = 0;
     internal float Health;
@@ -87,7 +90,7 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         len = myColors.Length;
-        Health = 100f;
+        ResetRunStats();
         ManagerDownBtn.Shop = true;
         ManagerDownBtn.Equipement = true;
         ManagerDownBtn.Death = true;
@@ -117,16 +120,20 @@ public class GameManager : MonoBehaviour
             CheckEnemy();
             ReloadingWapeons();
 
-            HealthBar.fillAmount = Health / 100f;
-            if (HealthBar.fillAmount == 0.5f)
-            {
-                HealthBar.color = Color.yellow;
-            }
-            if (HealthBar.fillAmount == 0.3f)
+            HealthBar.fillAmount = Mathf.Clamp01(Health / MaxHealth);
+            if (HealthBar.fillAmount <= 0.3f)
             {
                 HealthBar.color = Color.red;
             }
-            if(HealthBar.fillAmount == 0 && PlayerDeath == false)
+            else if (HealthBar.fillAmount <= 0.5f)
+            {
+                HealthBar.color = Color.yellow;
+            }
+            else
+            {
+                HealthBar.color = Color.green;
+            }
+            if(Health <= 0f && PlayerDeath == false)
             {
                 Debug.Log("You are Death");
                 BtnPause();
@@ -139,9 +146,6 @@ public class GameManager : MonoBehaviour
                 CheckValeurFill();
                 if (ScoringLevel.fillAmount == 1)
                 {
-                    WeaponSpawn.PauseFirst = Random.Range(1, 12);
-                    WeaponSpawn.PauseSecond = Random.Range(1, 12);
-                    WeaponSpawn.PauseThrees = Random.Range(1, 12);
                     WeaponSpawn.ActivateWeapon = true;
                     Times.timerIsRunning = false;
                     CurrentReload += 1;
@@ -229,7 +233,7 @@ public class GameManager : MonoBehaviour
     }
     void ReloadingWapeons()
     {    
-        Valeur += 1f * Time.deltaTime;
+        Valeur += FireRateMultiplier * Time.deltaTime;
         if(ReloadWeapon.fillAmount < 1 && RightFill == true)
         {
             SpawnObject = false;
@@ -320,5 +324,25 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.5f);
         CheckFinish = true;
+    }
+
+    public void ResetRunStats()
+    {
+        MaxHealth = 100f;
+        Health = MaxHealth;
+        FireRateMultiplier = 1f;
+        HealthBar.fillAmount = 1f;
+        HealthBar.color = Color.green;
+    }
+
+    public void UpgradeHealth()
+    {
+        MaxHealth += 20f;
+        Health = Mathf.Min(Health + 20f, MaxHealth);
+    }
+
+    public void UpgradeFireRate()
+    {
+        FireRateMultiplier = Mathf.Min(FireRateMultiplier + 0.25f, MaxFireRateMultiplier);
     }
 }

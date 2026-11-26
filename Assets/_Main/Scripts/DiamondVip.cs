@@ -11,7 +11,8 @@ public class DiamondVip : MonoBehaviour
     internal bool MoveOn = false;
     public bool Green = false;
     public bool WorkOn = true;
-    internal int Checking;
+    public float ExperienceValue = 1f;
+    private bool IsCollected;
     void Start()
     {
         StartCoroutine(FollowPlayer());
@@ -21,7 +22,6 @@ public class DiamondVip : MonoBehaviour
     }
     void Update()
     {
-        Checking = Random.Range(0, 2);
         if (MoveOn == true)
         {
             transform.position = Vector2.MoveTowards(this.transform.position, Player.transform.position, 10f * Time.deltaTime);
@@ -54,15 +54,18 @@ public class DiamondVip : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if(other.CompareTag("Player"))
+        if (IsCollected || !other.CompareTag("Player"))
         {
-            Manager.GetComponent<GameManager>().ValureLevel += Checking;
-            if(Green == true)
-            {
-                UIManager.GetComponent<ManagerMecanique>().GemsInt += 1;
-                PlayerPrefs.SetInt("gems", UIManager.GetComponent<ManagerMecanique>().GemsInt);
-            }
-            StartCoroutine(FlashingLed());
+            return;
         }
+
+        IsCollected = true;
+        Manager.GetComponent<GameManager>().ValureLevel += ExperienceValue;
+        if (Green)
+        {
+            UIManager.GetComponent<ManagerMecanique>().GemsInt += 1;
+            PlayerPrefs.SetInt("gems", UIManager.GetComponent<ManagerMecanique>().GemsInt);
+        }
+        StartCoroutine(FlashingLed());
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
 using TMPro;
+using SurvivorIO.UpgradeFlow;
 
 public class ManagerWeapons : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class ManagerWeapons : MonoBehaviour
     public Image IconOne;
     public Image IconTwo;
     public Image IconThree;
+    public Sprite HealthIcon;
 
     [Header("Description")]
     public TextMeshProUGUI DescriptionOne;
@@ -57,6 +59,10 @@ public class ManagerWeapons : MonoBehaviour
     [Header("Boolean Manager")]
     internal bool ActivateWeapon = true;
 
+    private const int HealthOption = 13;
+    private const int RapidFireOption = 14;
+    private static readonly System.Random OfferRandom = new System.Random();
+
     void Start()
     {
 
@@ -67,15 +73,55 @@ public class ManagerWeapons : MonoBehaviour
         {
             if(FillingScore.ScoringLevel.fillAmount == 1)
             {
-                PauseFirst = Random.Range(1, 12);
-                PauseSecond = Random.Range(1, 12);
-                PauseThrees = Random.Range(1, 12);
-                PauseOne();
-                PauseTwo();
-                PauseThree();
-                ActivateWeapon = false;
+                GenerateOffers();
             }
         }
+    }
+    void GenerateOffers()
+    {
+        List<int> available = new List<int>();
+        for (int option = 1; option <= 12; option++)
+        {
+            if (!WeaponsManager.IsWeaponUnlocked(option))
+            {
+                available.Add(option);
+            }
+        }
+        available.Add(HealthOption);
+        if (FillingScore.FireRateMultiplier < GameManager.MaxFireRateMultiplier)
+        {
+            available.Add(RapidFireOption);
+        }
+
+        ClearButtonListeners();
+        List<int> offers = UpgradeOfferSelector.SelectDistinct(available, 3, OfferRandom);
+        FirstBtn.SetActive(offers.Count > 0);
+        SecondBtn.SetActive(offers.Count > 1);
+        ThirdBtn.SetActive(offers.Count > 2);
+
+        PauseFirst = offers.Count > 0 ? offers[0] : 0;
+        PauseSecond = offers.Count > 1 ? offers[1] : 0;
+        PauseThrees = offers.Count > 2 ? offers[2] : 0;
+        if (offers.Count > 0)
+        {
+            PauseOne();
+        }
+        if (offers.Count > 1)
+        {
+            PauseTwo();
+        }
+        if (offers.Count > 2)
+        {
+            PauseThree();
+        }
+        ActivateWeapon = false;
+    }
+
+    void ClearButtonListeners()
+    {
+        FirstBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        SecondBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        ThirdBtn.GetComponent<Button>().onClick.RemoveAllListeners();
     }
     void PauseOne()
     {
@@ -93,53 +139,61 @@ public class ManagerWeapons : MonoBehaviour
     /////////
     void ManagerThirdPlace()
     {
-        if (PauseSecond == 1)
+        if (PauseThrees == 1)
         {
             AguelThree();
         }
-        if (PauseSecond == 2)
+        if (PauseThrees == 2)
         {
             BallThree();
         }
-        if (PauseSecond == 3)
+        if (PauseThrees == 3)
         {
             BrikThree();
         }
-        if (PauseSecond == 4)
+        if (PauseThrees == 4)
         {
             DroneAThree();
         }
-        if (PauseSecond == 5)
+        if (PauseThrees == 5)
         {
             DroneBThree();
         }
-        if (PauseSecond == 6)
+        if (PauseThrees == 6)
         {
             DroneCThree();
         }
-        if (PauseSecond == 7)
+        if (PauseThrees == 7)
         {
             FireGaseThree();
         }
-        if (PauseSecond == 8)
+        if (PauseThrees == 8)
         {
             FireShanShonThree();
         }
-        if (PauseSecond == 9)
+        if (PauseThrees == 9)
         {
             GunThree();
         }
-        if (PauseSecond == 10)
+        if (PauseThrees == 10)
         {
             ProtecteurThree();
         }
-        if (PauseSecond == 11)
+        if (PauseThrees == 11)
         {
             SprineAThree();
         }
-        if (PauseSecond == 12)
+        if (PauseThrees == 12)
         {
             SprineBThree();
+        }
+        if (PauseThrees == HealthOption)
+        {
+            HealthThree();
+        }
+        if (PauseThrees == RapidFireOption)
+        {
+            RapidFireThree();
         }
     }
     void ManagerSecondPlace()
@@ -192,6 +246,14 @@ public class ManagerWeapons : MonoBehaviour
         {
             SprineBTwo();
         }
+        if (PauseSecond == HealthOption)
+        {
+            HealthTwo();
+        }
+        if (PauseSecond == RapidFireOption)
+        {
+            RapidFireTwo();
+        }
     }
     void ManagerFirstPlace()
     {
@@ -243,6 +305,14 @@ public class ManagerWeapons : MonoBehaviour
         {
             SprineBOne();
         }
+        if (PauseFirst == HealthOption)
+        {
+            HealthOne();
+        }
+        if (PauseFirst == RapidFireOption)
+        {
+            RapidFireOne();
+        }
     }
     /// <summary>
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -255,9 +325,7 @@ public class ManagerWeapons : MonoBehaviour
     IEnumerator FinishingCleaning()
     {
         yield return new WaitForSeconds(1f);
-        FirstBtn.GetComponent<Button>().onClick.RemoveAllListeners();
-        SecondBtn.GetComponent<Button>().onClick.RemoveAllListeners();
-        ThirdBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        ClearButtonListeners();
     }
     /////////////
     void AguelOne()
@@ -469,7 +537,7 @@ public class ManagerWeapons : MonoBehaviour
     {
         NameTwo.text = WeaponsManager.NDroneB;
         DescriptionTwo.text = WeaponsManager.DDroneB;
-        IconTwo.sprite = WeaponsManager.SDroneA;
+        IconTwo.sprite = WeaponsManager.SDroneB;
         SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneB);
     }
     void DroneBThree()
@@ -522,5 +590,53 @@ public class ManagerWeapons : MonoBehaviour
         DescriptionThree.text = WeaponsManager.DProtecteurGreen;
         IconThree.sprite = WeaponsManager.SProtecteurGreen;
         ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnProtecteurGreen);
+    }
+
+    void HealthOne()
+    {
+        NameOne.text = "Vitality";
+        DescriptionOne.text = "Increase maximum health by 20 and recover 20 health.";
+        IconOne.sprite = HealthIcon;
+        FirstBtn.GetComponent<Button>().onClick.AddListener(FillingScore.UpgradeHealth);
+    }
+
+    void HealthTwo()
+    {
+        NameTwo.text = "Vitality";
+        DescriptionTwo.text = "Increase maximum health by 20 and recover 20 health.";
+        IconTwo.sprite = HealthIcon;
+        SecondBtn.GetComponent<Button>().onClick.AddListener(FillingScore.UpgradeHealth);
+    }
+
+    void HealthThree()
+    {
+        NameThree.text = "Vitality";
+        DescriptionThree.text = "Increase maximum health by 20 and recover 20 health.";
+        IconThree.sprite = HealthIcon;
+        ThirdBtn.GetComponent<Button>().onClick.AddListener(FillingScore.UpgradeHealth);
+    }
+
+    void RapidFireOne()
+    {
+        NameOne.text = "Rapid Fire";
+        DescriptionOne.text = "Increase the player's firing speed by 25%.";
+        IconOne.sprite = WeaponsManager.SGun;
+        FirstBtn.GetComponent<Button>().onClick.AddListener(FillingScore.UpgradeFireRate);
+    }
+
+    void RapidFireTwo()
+    {
+        NameTwo.text = "Rapid Fire";
+        DescriptionTwo.text = "Increase the player's firing speed by 25%.";
+        IconTwo.sprite = WeaponsManager.SGun;
+        SecondBtn.GetComponent<Button>().onClick.AddListener(FillingScore.UpgradeFireRate);
+    }
+
+    void RapidFireThree()
+    {
+        NameThree.text = "Rapid Fire";
+        DescriptionThree.text = "Increase the player's firing speed by 25%.";
+        IconThree.sprite = WeaponsManager.SGun;
+        ThirdBtn.GetComponent<Button>().onClick.AddListener(FillingScore.UpgradeFireRate);
     }
 }

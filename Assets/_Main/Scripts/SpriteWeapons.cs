@@ -100,6 +100,27 @@ public class SpriteWeapons : MonoBehaviour
         DroneObjectsContainer.SetActive(false);
         SprineContainer.SetActive(false);
     }
+
+    public bool IsWeaponUnlocked(int option)
+    {
+        switch (option)
+        {
+            case 1: return Aguel.activeSelf;
+            case 2: return Ball.activeSelf;
+            case 3: return BrikWall.activeSelf;
+            case 4: return DroneA.activeSelf;
+            case 5: return DroneB.activeSelf;
+            case 6: return DroneC.activeSelf;
+            case 7: return FireGase.activeSelf;
+            case 8: return SalsaRanshom.activeSelf;
+            case 9: return Gun.activeSelf;
+            case 10: return ProtecteurGreen.activeSelf;
+            case 11: return SprineA.activeSelf;
+            case 12: return SprineB.activeSelf;
+            default: return false;
+        }
+    }
+
     public void Onaguel()
     {
         Aguel.SetActive(true);

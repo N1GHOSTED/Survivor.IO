@@ -127,4 +127,6 @@ MonoBehaviour:
   Player: {fileID: 0}
   Manager: {fileID: 0}
   UIManager: {fileID: 0}
+  Green: 0
+  ExperienceValue: 1
   WorkOn: 0

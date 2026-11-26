@@ -77,7 +77,7 @@ public class UIManager : MonoBehaviour
             FinishScreen.SetActive(true);
             Advertisements.Instance.ShowInterstitial();
             Manager.PlayerDeath = false;
-            Manager.Health = 100;
+            Manager.Health = Manager.MaxHealth;
             Manager.HealthBar.color = Color.green;
             FinishScreenB = true;
         }
@@ -130,6 +130,8 @@ public class UIManager : MonoBehaviour
     }
     public void PlayBtn()
     {
+        Manager.ResetRunStats();
+        Weapons.DesactivateAll();
         EffectFade.SetActive(true);
         (Instantiate(Level.Level1, Level.Level1.transform.position, Level.Level1.transform.rotation) as GameObject).transform.SetParent(LevelLocalisation.transform);
         CurrentName = Level.Level1.gameObject.name + "(Clone)";

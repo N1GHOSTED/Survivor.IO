@@ -20,6 +20,7 @@ public class EnemyManager : MonoBehaviour
     internal bool FollowPlayer = true;
     internal int ValueAdd;
     internal int Diamond;
+    private bool DeathStarted;
 
     [Header("Diamond")]
     public GameObject BlueDiamond;
@@ -33,7 +34,7 @@ public class EnemyManager : MonoBehaviour
         BloodLocalisation = GameObject.Find("BloodManager");
         Player = GameObject.FindGameObjectWithTag("Player").transform;
         ValueAdd = Random.Range(1, 100);
-        Diamond = Random.Range(1, 3);
+        Diamond = Random.Range(1, 4);
         Audio = GetComponent<AudioSource>();
     }
 
@@ -86,8 +87,14 @@ public class EnemyManager : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
+        if (DeathStarted)
+        {
+            return;
+        }
+
         if (other.CompareTag("Bolt"))
         {
+            DeathStarted = true;
             Audio.Play();
             Bolt.SetActive(true);
             Bolt.GetComponent<TextMeshProUGUI>().color = Color.red;
@@ -99,6 +106,7 @@ public class EnemyManager : MonoBehaviour
         }
         if (other.CompareTag("ball"))
         {
+            DeathStarted = true;
             Audio.Play();
             Bolt.SetActive(true);
             Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;
@@ -109,6 +117,7 @@ public class EnemyManager : MonoBehaviour
         }        
         if (other.CompareTag("Fire"))
         {
+            DeathStarted = true;
             Audio.Play();
             Bolt.SetActive(true);
             Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;
@@ -119,6 +128,7 @@ public class EnemyManager : MonoBehaviour
         }
         if (other.CompareTag("Spiner"))
         {
+            DeathStarted = true;
             Audio.Play();
             Bolt.SetActive(true);
             Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;

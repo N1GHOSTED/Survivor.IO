@@ -26542,6 +26542,7 @@ MonoBehaviour:
   IconOne: {fileID: 417745813}
   IconTwo: {fileID: 933116985}
   IconThree: {fileID: 1046318514}
+  HealthIcon: {fileID: 21300006, guid: 49632d1339282f5499fbc1e9ba542c28, type: 3}
   DescriptionOne: {fileID: 1640228894}
   DescriptionTwo: {fileID: 1124583523}
   DescriptionThree: {fileID: 1487737504}
