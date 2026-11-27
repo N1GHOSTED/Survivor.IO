@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using SurvivorIO.UpgradeFlow;
 
 public class SpawenManager : MonoBehaviour
 {
@@ -63,10 +62,14 @@ public class SpawenManager : MonoBehaviour
         {
             if (!ManagerPose && Managers != null && Zombie != null && SpawenLocalisation != null)
             {
-                int enemyCount = CountEnemyChildren();
-                int spawnCount = SpawnCapacity.GetSpawnCount(enemyCount, Managers.GetEnemyCount(), maxEnemies);
+                int spawnCount = Managers.GetEnemyCount();
                 for (int index = 0; index < spawnCount; index++)
                 {
+                    if (CountEnemyChildren() >= maxEnemies)
+                    {
+                        break;
+                    }
+
                     GameObject point = index % 2 == 0 ? Spawen1 : Spawen2;
                     if (point == null)
                     {
@@ -78,7 +81,6 @@ public class SpawenManager : MonoBehaviour
                     position.y += Random.Range(-5f, 5f);
                     GameObject enemy = Instantiate(Zombie, position, point.transform.rotation);
                     enemy.transform.SetParent(SpawenLocalisation.transform);
-                    enemyCount++;
                 }
             }
 

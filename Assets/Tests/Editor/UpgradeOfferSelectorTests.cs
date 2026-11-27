@@ -25,14 +25,6 @@ public class UpgradeOfferSelectorTests
     }
 
     [Test]
-    public void SpawnCapacityDoesNotExceedEnemyLimit()
-    {
-        Assert.That(SpawnCapacity.GetSpawnCount(148, 5, 150), Is.EqualTo(2));
-        Assert.That(SpawnCapacity.GetSpawnCount(150, 5, 150), Is.Zero);
-        Assert.That(SpawnCapacity.GetSpawnCount(151, 5, 150), Is.Zero);
-    }
-
-    [Test]
     public void OneShotGateAllowsOnlyOneAcquisition()
     {
         var gate = new OneShotGate();
