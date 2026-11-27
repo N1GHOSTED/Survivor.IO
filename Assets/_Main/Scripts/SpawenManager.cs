@@ -60,7 +60,8 @@ public class SpawenManager : MonoBehaviour
     {
         while (true)
         {
-            if (!ManagerPose && Managers != null && Zombie != null && SpawenLocalisation != null)
+            if (!ManagerPose && Managers != null && Managers.Times != null && Managers.Times.timerIsRunning
+                && Zombie != null && SpawenLocalisation != null)
             {
                 int spawnCount = Managers.GetEnemyCount();
                 for (int index = 0; index < spawnCount; index++)
