@@ -27,6 +27,8 @@ public class ControllerSpawening : MonoBehaviour
             Spawner.SetActive(true);
             if(CheckWork == true)
             {
+                SpawenOne.GetComponent<SpawenManager>().enabled = true;
+                SpawenTwo.GetComponent<SpawenManager>().enabled = true;
                 CheckWork = false;
             }
         }
