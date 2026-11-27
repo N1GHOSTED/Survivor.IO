@@ -3,6 +3,37 @@ using System.Collections.Generic;
 
 namespace SurvivorIO.UpgradeFlow
 {
+    public sealed class CombatCooldown
+    {
+        private float nextAllowedTime;
+
+        public bool TryHit(float currentTime, float intervalSeconds)
+        {
+            if (currentTime < nextAllowedTime)
+            {
+                return false;
+            }
+
+            nextAllowedTime = currentTime + Math.Max(0.01f, intervalSeconds);
+            return true;
+        }
+    }
+
+    public static class DifficultyProfile
+    {
+        public static int GetEnemyCount(float elapsedSeconds)
+        {
+            int stages = (int)Math.Floor(Math.Max(0f, elapsedSeconds) / 30f);
+            return Math.Max(2, Math.Min(8, 2 + stages));
+        }
+
+        public static float GetEnemyHealth(float elapsedSeconds)
+        {
+            int stages = (int)Math.Floor(Math.Max(0f, elapsedSeconds) / 30f);
+            return 1f + stages;
+        }
+    }
+
     public sealed class OneShotGate
     {
         private bool acquired;

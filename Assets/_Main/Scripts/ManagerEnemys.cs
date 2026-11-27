@@ -19,7 +19,6 @@ public class ManagerEnemys : MonoBehaviour
         if(Stop == true)
         {
             ManagerMec.LevelLevel += 0.005f;
-            PlayerPrefs.SetFloat("Score", ManagerMec.LevelLevel);
         }
     }
     IEnumerator Spawning()

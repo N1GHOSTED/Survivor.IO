@@ -12,6 +12,8 @@ public class CoinsManager : MonoBehaviour
     internal bool MoveOn = false;
     public bool WorkOn = true;
     private readonly OneShotGate CollectionGate = new OneShotGate();
+    private ManagerMecanique mecanique;
+    private GameManager gameManager;
     void Start()
     {
         Player = GameObject.FindGameObjectWithTag("Player");
@@ -19,6 +21,8 @@ public class CoinsManager : MonoBehaviour
         UIManager = GameObject.Find("UI");
         Effect = GetComponent<AudioSource>();
         Effect.volume = 0.5f;
+        mecanique = UIManager != null ? UIManager.GetComponent<ManagerMecanique>() : null;
+        gameManager = Manager != null ? Manager.GetComponent<GameManager>() : null;
     }
     void Update()
     {
@@ -52,15 +56,18 @@ public class CoinsManager : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if (!other.CompareTag("Player") || !CollectionGate.TryAcquire())
+        if (!other.CompareTag("Player") || mecanique == null || gameManager == null)
+        {
+            return;
+        }
+        if (!CollectionGate.TryAcquire())
         {
             return;
         }
 
         StartCoroutine(FollowPlayer());
-        UIManager.GetComponent<ManagerMecanique>().CoinsInt += 1;
-        Manager.GetComponent<GameManager>().CurrentCurrency += 1;
-        PlayerPrefs.SetInt("coins" , UIManager.GetComponent<ManagerMecanique>().CoinsInt);
+        mecanique.CoinsInt += 1;
+        gameManager.CurrentCurrency += 1;
         StartCoroutine(FlashingLed());
     }
 }

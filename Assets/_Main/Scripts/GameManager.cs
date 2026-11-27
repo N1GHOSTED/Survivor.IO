@@ -8,6 +8,7 @@ using Unity.VisualScripting;
 using static UnityEngine.GraphicsBuffer;
 using Unity.VisualScripting.Antlr3.Runtime.Collections;
 using System.Numerics;
+using SurvivorIO.UpgradeFlow;
 
 public class GameManager : MonoBehaviour
 {
@@ -87,6 +88,8 @@ public class GameManager : MonoBehaviour
     internal bool PlayerDeath = false;
     internal bool Checkenemys = false;
     private bool LevelUpDisabledSpawner = false;
+    internal float ElapsedTime;
+    private float NextEnemyCacheTime;
 
     void Start()
     {
@@ -118,7 +121,12 @@ public class GameManager : MonoBehaviour
         }
         if(Boolean.GameStart == true)
         {
-            CheckEnemy();
+            ElapsedTime += Time.deltaTime;
+            if (Time.time >= NextEnemyCacheTime)
+            {
+                CheckEnemy();
+                NextEnemyCacheTime = Time.time + 0.25f;
+            }
             ReloadingWapeons();
 
             HealthBar.fillAmount = Mathf.Clamp01(Health / MaxHealth);
@@ -225,9 +233,6 @@ public class GameManager : MonoBehaviour
         ValueKilled.text =  "" + CurrentKilled;
         ValueKilledScreenFinish.text =  "" + CurrentKilled;
         CurrentCoins.text = "" + CurrentCurrency;
-        PlayerPrefs.SetInt("CurrentKilled", CurrentKilled);
-        PlayerPrefs.SetInt("CurrentCurrency", CurrentCurrency);
-
     }
     void CheckValeurFill()
     {
@@ -347,6 +352,7 @@ public class GameManager : MonoBehaviour
         MaxHealth = 100f;
         Health = MaxHealth;
         FireRateMultiplier = 1f;
+        ElapsedTime = 0f;
         HealthBar.fillAmount = 1f;
         HealthBar.color = Color.green;
     }
@@ -360,5 +366,15 @@ public class GameManager : MonoBehaviour
     public void UpgradeFireRate()
     {
         FireRateMultiplier = Mathf.Min(FireRateMultiplier + 0.25f, MaxFireRateMultiplier);
+    }
+
+    public int GetEnemyCount()
+    {
+        return DifficultyProfile.GetEnemyCount(ElapsedTime);
+    }
+
+    public float GetEnemyHealth()
+    {
+        return DifficultyProfile.GetEnemyHealth(ElapsedTime);
     }
 }

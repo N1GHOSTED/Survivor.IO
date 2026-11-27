@@ -62,16 +62,17 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         Checking = PlayerPrefs.GetString("CheckEvolve");
+        CheckEvolve = Checking;
     }
     void Update()
     {
-        CheckEvolve = PlayerPrefs.GetString("CheckEvolve");
         if (CheckEvolve == "work")
         {
             Manager.ManagerDownBtn.Evolve = true;
         }
         if(Manager.PlayerDeath == true && FinishScreenB == false)
         {
+            PersistRunStats();
             DestroyEnemys = true;
             StopAllAudios = true;
             FinishScreen.SetActive(true);
@@ -85,10 +86,10 @@ public class UIManager : MonoBehaviour
         {
             StopAllAudios = false;
         }
-            CurrentLevel = GameObject.Find(CurrentName);
     }
     public void BackBtn()
     {
+        PersistRunStats();
         MapReady = false;
         EffectFadeGamePlay.SetActive(true);
         DestroyEnemys = true;
@@ -98,6 +99,7 @@ public class UIManager : MonoBehaviour
     }
     public void BackFinish()
     {
+        PersistRunStats();
         MapReady = false;
         DestroyEnemys = true;
         EffectFadeGamePlay.SetActive(true);
@@ -133,8 +135,10 @@ public class UIManager : MonoBehaviour
         Manager.ResetRunStats();
         Weapons.DesactivateAll();
         EffectFade.SetActive(true);
-        (Instantiate(Level.Level1, Level.Level1.transform.position, Level.Level1.transform.rotation) as GameObject).transform.SetParent(LevelLocalisation.transform);
-        CurrentName = Level.Level1.gameObject.name + "(Clone)";
+        GameObject levelInstance = Instantiate(Level.Level1, Level.Level1.transform.position, Level.Level1.transform.rotation);
+        levelInstance.transform.SetParent(LevelLocalisation.transform);
+        CurrentLevel = levelInstance;
+        CurrentName = levelInstance.name;
         StartCoroutine(GameStart());
     }
     IEnumerator GameStart()
@@ -178,5 +182,18 @@ public class UIManager : MonoBehaviour
     {
         ScreenPause.SetActive(false);
         Manager.ResumeBtn();
+    }
+    public void PersistRunStats()
+    {
+        if (Mecanique != null)
+        {
+            Mecanique.PersistRunProgress();
+        }
+        if (Manager != null)
+        {
+            PlayerPrefs.SetInt("CurrentKilled", Manager.CurrentKilled);
+            PlayerPrefs.SetInt("CurrentCurrency", Manager.CurrentCurrency);
+        }
+        PlayerPrefs.Save();
     }
 }

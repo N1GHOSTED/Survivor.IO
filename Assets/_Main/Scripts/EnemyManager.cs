@@ -18,9 +18,16 @@ public class EnemyManager : MonoBehaviour
     public GameObject Bolt;
     private Transform Player;
     internal bool FollowPlayer = true;
-    internal int ValueAdd;
+    internal float ValueAdd = 1f;
     internal int Diamond;
     private bool DeathStarted;
+    private GameManager gameManager;
+    private UIManager uiManager;
+    private Rigidbody2D rigidbody2D;
+    private SpriteRenderer spriteRenderer;
+    private Animator animator;
+    public float Health = 1f;
+    public float MaxHealth = 1f;
 
     [Header("Diamond")]
     public GameObject BlueDiamond;
@@ -29,23 +36,32 @@ public class EnemyManager : MonoBehaviour
 
     void Start()
     {
-        Manager = GameObject.Find("GameManager");
-        UImanager = GameObject.Find("UI");
-        BloodLocalisation = GameObject.Find("BloodManager");
-        Player = GameObject.FindGameObjectWithTag("Player").transform;
-        ValueAdd = Random.Range(1, 100);
+        Manager = Manager != null ? Manager : GameObject.Find("GameManager");
+        UImanager = UImanager != null ? UImanager : GameObject.Find("UI");
+        BloodLocalisation = BloodLocalisation != null ? BloodLocalisation : GameObject.Find("BloodManager");
+        Player = Player != null ? Player : GameObject.FindGameObjectWithTag("Player").transform;
+        gameManager = Manager != null ? Manager.GetComponent<GameManager>() : null;
+        uiManager = UImanager != null ? UImanager.GetComponent<UIManager>() : null;
+        rigidbody2D = GetComponent<Rigidbody2D>();
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        animator = GetComponent<Animator>();
         Diamond = Random.Range(1, 4);
         Audio = GetComponent<AudioSource>();
+        if (gameManager != null)
+        {
+            MaxHealth = gameManager.GetEnemyHealth();
+            Health = MaxHealth;
+        }
     }
 
     void Update()
     {
         if(FollowPlayer == true)
         {
-            transform.position = Vector2.MoveTowards(this.transform.position, Player.position, Manager.GetComponent<GameManager>().SpeedEnemy * Time.deltaTime);
-            this.gameObject.GetComponent<SpriteRenderer>().flipX = Player.transform.position.x < this.transform.position.x;
+            transform.position = Vector2.MoveTowards(this.transform.position, Player.position, gameManager.SpeedEnemy * Time.deltaTime);
+            spriteRenderer.flipX = Player.transform.position.x < this.transform.position.x;
         }
-        if(UImanager.GetComponent<UIManager>().DestroyEnemys == true)
+        if(uiManager != null && uiManager.DestroyEnemys == true)
         {
             Destroy(this.gameObject);
         }
@@ -85,6 +101,43 @@ public class EnemyManager : MonoBehaviour
         }
         Destroy(this.gameObject);
     }
+    public void TakeDamage(float damage, string damageSource)
+    {
+        if (DeathStarted)
+        {
+            return;
+        }
+
+        ValueAdd = damage;
+        Health -= damage;
+        if (Health <= 0f)
+        {
+            DeathStarted = true;
+            if (Audio != null)
+            {
+                Audio.Play();
+            }
+            if (Bolt != null)
+            {
+                Bolt.SetActive(true);
+                Bolt.GetComponent<TextMeshProUGUI>().text = damageSource + ": " + damage.ToString("0.##");
+            }
+            if (animator != null)
+            {
+                animator.Play("ZombieDeath");
+            }
+            if (HitEffect != null)
+            {
+                (Instantiate(HitEffect, transform.position, transform.rotation) as GameObject).transform.SetParent(BloodLocalisation.transform);
+            }
+            if (gameManager != null)
+            {
+                gameManager.CurrentKilled += 1;
+            }
+            StartCoroutine(AnimationController());
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         if (DeathStarted)
@@ -92,51 +145,10 @@ public class EnemyManager : MonoBehaviour
             return;
         }
 
-        if (other.CompareTag("Bolt"))
-        {
-            DeathStarted = true;
-            Audio.Play();
-            Bolt.SetActive(true);
-            Bolt.GetComponent<TextMeshProUGUI>().color = Color.red;
-            Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;
-            this.gameObject.GetComponent<Animator>().Play("ZombieDeath");
-            (Instantiate(HitEffect, transform.position, transform.rotation) as GameObject).transform.SetParent(BloodLocalisation.transform);
-            Manager.GetComponent<GameManager>().CurrentKilled += 1;
-            StartCoroutine(AnimationController());
-        }
-        if (other.CompareTag("ball"))
-        {
-            DeathStarted = true;
-            Audio.Play();
-            Bolt.SetActive(true);
-            Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;
-            this.gameObject.GetComponent<Animator>().Play("ZombieDeath");
-            (Instantiate(HitEffect, transform.position, transform.rotation) as GameObject).transform.SetParent(BloodLocalisation.transform);
-            Manager.GetComponent<GameManager>().CurrentKilled += 1;
-            StartCoroutine(BallController());
-        }        
-        if (other.CompareTag("Fire"))
-        {
-            DeathStarted = true;
-            Audio.Play();
-            Bolt.SetActive(true);
-            Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;
-            this.gameObject.GetComponent<Animator>().Play("ZombieDeath");
-            (Instantiate(HitEffect, transform.position, transform.rotation) as GameObject).transform.SetParent(BloodLocalisation.transform);
-            Manager.GetComponent<GameManager>().CurrentKilled += 1;
-            StartCoroutine(BallController());
-        }
-        if (other.CompareTag("Spiner"))
-        {
-            DeathStarted = true;
-            Audio.Play();
-            Bolt.SetActive(true);
-            Bolt.GetComponent<TextMeshProUGUI>().text = "" + ValueAdd;
-            this.gameObject.GetComponent<Animator>().Play("ZombieDeath");
-            (Instantiate(HitEffect, transform.position, transform.rotation) as GameObject).transform.SetParent(BloodLocalisation.transform);
-            Manager.GetComponent<GameManager>().CurrentKilled += 1;
-            StartCoroutine(AnimationController());
-        }
+        if (other.CompareTag("Bolt")) TakeDamage(1f, "Bolt");
+        else if (other.CompareTag("ball")) TakeDamage(1f, "Ball");
+        else if (other.CompareTag("Fire")) TakeDamage(1f, "Fire");
+        else if (other.CompareTag("Spiner")) TakeDamage(1f, "Spinner");
         if (other.CompareTag("Player"))
         {
             Audio.Play();

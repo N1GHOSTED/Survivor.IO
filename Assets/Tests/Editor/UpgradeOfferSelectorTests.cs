@@ -6,6 +6,25 @@ using SurvivorIO.UpgradeFlow;
 public class UpgradeOfferSelectorTests
 {
     [Test]
+    public void CombatCooldownAllowsHitsAtConfiguredInterval()
+    {
+        var cooldown = new CombatCooldown();
+
+        Assert.That(cooldown.TryHit(1f, 0.5f), Is.True);
+        Assert.That(cooldown.TryHit(1.25f, 0.5f), Is.False);
+        Assert.That(cooldown.TryHit(1.5f, 0.5f), Is.True);
+    }
+
+    [Test]
+    public void DifficultyProfileIncreasesCountAndHealthOverTime()
+    {
+        Assert.That(DifficultyProfile.GetEnemyCount(0f), Is.EqualTo(2));
+        Assert.That(DifficultyProfile.GetEnemyCount(30f), Is.EqualTo(3));
+        Assert.That(DifficultyProfile.GetEnemyHealth(30f), Is.EqualTo(2f));
+        Assert.That(DifficultyProfile.GetEnemyCount(300f), Is.EqualTo(8));
+    }
+
+    [Test]
     public void OneShotGateAllowsOnlyOneAcquisition()
     {
         var gate = new OneShotGate();

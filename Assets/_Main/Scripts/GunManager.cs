@@ -39,13 +39,28 @@ public class GunManager : MonoBehaviour
     {
         yield return new WaitForEndOfFrame();
         Audio.Play();
-        (Instantiate(Bullet0, Pos0.transform.position, transform.rotation) as GameObject).transform.SetParent(ContainerBolt.transform);
-        (Instantiate(Bullet1, Pos1.transform.position, transform.rotation) as GameObject).transform.SetParent(ContainerBolt.transform);
-        (Instantiate(Bullet2, Pos2.transform.position, transform.rotation) as GameObject).transform.SetParent(ContainerBolt.transform);
-        (Instantiate(Bullet3, Pos3.transform.position, transform.rotation) as GameObject).transform.SetParent(ContainerBolt.transform);
-        (Instantiate(Bullet4, Pos4.transform.position, transform.rotation) as GameObject).transform.SetParent(ContainerBolt.transform);
-        (Instantiate(Bullet5, Pos5.transform.position, transform.rotation) as GameObject).transform.SetParent(ContainerBolt.transform);
+        SpawnGunBullet(Bullet0, Pos0);
+        SpawnGunBullet(Bullet1, Pos1);
+        SpawnGunBullet(Bullet2, Pos2);
+        SpawnGunBullet(Bullet3, Pos3);
+        SpawnGunBullet(Bullet4, Pos4);
+        SpawnGunBullet(Bullet5, Pos5);
         yield return new WaitForSeconds(2f);
         StartCoroutine(SpaweningBolt());
+    }
+    void SpawnGunBullet(GameObject bulletPrefab, GameObject followPoint)
+    {
+        if (bulletPrefab == null || followPoint == null || ContainerBolt == null)
+        {
+            return;
+        }
+
+        GameObject bullet = Instantiate(bulletPrefab, followPoint.transform.position, transform.rotation);
+        bullet.transform.SetParent(ContainerBolt.transform);
+        GunBullte gunBullet = bullet.GetComponent<GunBullte>();
+        if (gunBullet != null)
+        {
+            gunBullet.FollowPoint = followPoint;
+        }
     }
 }
