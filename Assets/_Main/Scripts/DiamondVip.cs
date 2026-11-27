@@ -11,22 +11,28 @@ public class DiamondVip : MonoBehaviour
     internal bool MoveOn = false;
     public bool Green = false;
     public bool WorkOn = true;
-    internal int Checking;
+    public float ExperienceValue = 1f;
+    private bool IsCollected;
+    private GameManager gameManager;
+    private ManagerMecanique mecanique;
+    private UIManager uiManager;
     void Start()
     {
         StartCoroutine(FollowPlayer());
         Player = GameObject.FindGameObjectWithTag("Player");
         Manager = GameObject.Find("GameManager");
         UIManager = GameObject.Find("UI");
+        gameManager = Manager != null ? Manager.GetComponent<GameManager>() : null;
+        mecanique = UIManager != null ? UIManager.GetComponent<ManagerMecanique>() : null;
+        uiManager = UIManager != null ? UIManager.GetComponent<UIManager>() : null;
     }
     void Update()
     {
-        Checking = Random.Range(0, 2);
         if (MoveOn == true)
         {
             transform.position = Vector2.MoveTowards(this.transform.position, Player.transform.position, 10f * Time.deltaTime);
         }
-        if(UIManager.GetComponent<UIManager>().MapReady == false)
+        if(uiManager != null && uiManager.MapReady == false)
         {
             Destroy(this.gameObject);
         }
@@ -45,24 +51,26 @@ public class DiamondVip : MonoBehaviour
     IEnumerator FlashingLed()
     {
         yield return new WaitForEndOfFrame();
-        Manager.GetComponent<GameManager>().FillingFlash.SetActive(true);
+        if (gameManager != null) gameManager.FillingFlash.SetActive(true);
         yield return new WaitForSeconds(0.005f);
-        Manager.GetComponent<GameManager>().FillingFlash.SetActive(false);
+        if (gameManager != null) gameManager.FillingFlash.SetActive(false);
         yield return new WaitForEndOfFrame();
         Destroy(this.gameObject);
 
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if(other.CompareTag("Player"))
+        if (IsCollected || !other.CompareTag("Player"))
         {
-            Manager.GetComponent<GameManager>().ValureLevel += Checking;
-            if(Green == true)
-            {
-                UIManager.GetComponent<ManagerMecanique>().GemsInt += 1;
-                PlayerPrefs.SetInt("gems", UIManager.GetComponent<ManagerMecanique>().GemsInt);
-            }
-            StartCoroutine(FlashingLed());
+            return;
         }
+
+        IsCollected = true;
+        if (gameManager != null) gameManager.ValureLevel += ExperienceValue;
+        if (Green)
+        {
+            if (mecanique != null) mecanique.GemsInt += 1;
+        }
+        StartCoroutine(FlashingLed());
     }
 }

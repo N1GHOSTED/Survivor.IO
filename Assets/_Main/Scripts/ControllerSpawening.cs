@@ -27,10 +27,6 @@ public class ControllerSpawening : MonoBehaviour
             Spawner.SetActive(true);
             if(CheckWork == true)
             {
-                StartCoroutine(SpawenOne.GetComponent<SpawenManager>().SpaweningManager());
-                StartCoroutine(SpawenTwo.GetComponent<SpawenManager>().SpaweningManager());
-                StartCoroutine(SpawenOne.GetComponent<SpawenManager>().stopSpawning());
-                StartCoroutine(SpawenTwo.GetComponent<SpawenManager>().stopSpawning());
                 CheckWork = false;
             }
         }

@@ -8,6 +8,7 @@ using Unity.VisualScripting;
 using static UnityEngine.GraphicsBuffer;
 using Unity.VisualScripting.Antlr3.Runtime.Collections;
 using System.Numerics;
+using SurvivorIO.UpgradeFlow;
 
 public class GameManager : MonoBehaviour
 {
@@ -56,6 +57,9 @@ public class GameManager : MonoBehaviour
     public float SpeedEnemy;
     internal float Valeur;
     internal float ValureLevel;
+    internal float MaxHealth = 100f;
+    internal float FireRateMultiplier = 1f;
+    internal const float MaxFireRateMultiplier = 3f;
     public float LerpTime = 0.1f;
     internal float t = 0;
     internal float Health;
@@ -83,11 +87,14 @@ public class GameManager : MonoBehaviour
     internal bool SetActiveAll = true;
     internal bool PlayerDeath = false;
     internal bool Checkenemys = false;
+    private bool LevelUpDisabledSpawner = false;
+    internal float ElapsedTime;
+    private float NextEnemyCacheTime;
 
     void Start()
     {
         len = myColors.Length;
-        Health = 100f;
+        ResetRunStats();
         ManagerDownBtn.Shop = true;
         ManagerDownBtn.Equipement = true;
         ManagerDownBtn.Death = true;
@@ -114,19 +121,28 @@ public class GameManager : MonoBehaviour
         }
         if(Boolean.GameStart == true)
         {
-            CheckEnemy();
+            ElapsedTime += Time.deltaTime;
+            if (Time.time >= NextEnemyCacheTime)
+            {
+                CheckEnemy();
+                NextEnemyCacheTime = Time.time + 0.25f;
+            }
             ReloadingWapeons();
 
-            HealthBar.fillAmount = Health / 100f;
-            if (HealthBar.fillAmount == 0.5f)
-            {
-                HealthBar.color = Color.yellow;
-            }
-            if (HealthBar.fillAmount == 0.3f)
+            HealthBar.fillAmount = Mathf.Clamp01(Health / MaxHealth);
+            if (HealthBar.fillAmount <= 0.3f)
             {
                 HealthBar.color = Color.red;
             }
-            if(HealthBar.fillAmount == 0 && PlayerDeath == false)
+            else if (HealthBar.fillAmount <= 0.5f)
+            {
+                HealthBar.color = Color.yellow;
+            }
+            else
+            {
+                HealthBar.color = Color.green;
+            }
+            if(Health <= 0f && PlayerDeath == false)
             {
                 Debug.Log("You are Death");
                 BtnPause();
@@ -139,9 +155,6 @@ public class GameManager : MonoBehaviour
                 CheckValeurFill();
                 if (ScoringLevel.fillAmount == 1)
                 {
-                    WeaponSpawn.PauseFirst = Random.Range(1, 12);
-                    WeaponSpawn.PauseSecond = Random.Range(1, 12);
-                    WeaponSpawn.PauseThrees = Random.Range(1, 12);
                     WeaponSpawn.ActivateWeapon = true;
                     Times.timerIsRunning = false;
                     CurrentReload += 1;
@@ -151,7 +164,11 @@ public class GameManager : MonoBehaviour
                     PlayerPerfb.GetComponent<Rigidbody2D>().simulated = false;
                     if (EnemyAvailable == true)
                     {
-                        Spawner.enabled = false;
+                        if (Spawner.enabled)
+                        {
+                            LevelUpDisabledSpawner = true;
+                            Spawner.enabled = false;
+                        }
                         startmove = true;
                     }
                     ValureLevel = 0f;
@@ -216,9 +233,6 @@ public class GameManager : MonoBehaviour
         ValueKilled.text =  "" + CurrentKilled;
         ValueKilledScreenFinish.text =  "" + CurrentKilled;
         CurrentCoins.text = "" + CurrentCurrency;
-        PlayerPrefs.SetInt("CurrentKilled", CurrentKilled);
-        PlayerPrefs.SetInt("CurrentCurrency", CurrentCurrency);
-
     }
     void CheckValeurFill()
     {
@@ -229,7 +243,7 @@ public class GameManager : MonoBehaviour
     }
     void ReloadingWapeons()
     {    
-        Valeur += 1f * Time.deltaTime;
+        Valeur += FireRateMultiplier * Time.deltaTime;
         if(ReloadWeapon.fillAmount < 1 && RightFill == true)
         {
             SpawnObject = false;
@@ -262,6 +276,7 @@ public class GameManager : MonoBehaviour
     }
     public void FirstCont()
     {
+        RestoreLevelUpSpawner();
         ScreenAddonWap.SetActive(false);
         Times.timerIsRunning = true;
         PlayerPerfb.GetComponent<PlayerManager>().enabled = true;
@@ -280,6 +295,7 @@ public class GameManager : MonoBehaviour
     }
     public void SecondCont()
     {
+        RestoreLevelUpSpawner();
         ScreenAddonWap.SetActive(false);
         Times.timerIsRunning = true;
         PlayerPerfb.GetComponent<PlayerManager>().enabled = true;
@@ -298,11 +314,11 @@ public class GameManager : MonoBehaviour
     }
     public void ThirdCont()
     {
+        RestoreLevelUpSpawner();
         ScreenAddonWap.SetActive(false);
         Times.timerIsRunning = true;
         PlayerPerfb.GetComponent<PlayerManager>().enabled = true;
         PlayerPerfb.GetComponent<Rigidbody2D>().simulated = true;
-        //Spawner.enabled = true;
         if (EnemyAvailable == true)
         {
             startmove = false;
@@ -316,9 +332,49 @@ public class GameManager : MonoBehaviour
         StartCoroutine(CheckingFinishBtn());
     }
 
+    void RestoreLevelUpSpawner()
+    {
+        if (LevelUpDisabledSpawner)
+        {
+            Spawner.enabled = true;
+            LevelUpDisabledSpawner = false;
+        }
+    }
+
     IEnumerator CheckingFinishBtn()
     {
         yield return new WaitForSeconds(0.5f);
         CheckFinish = true;
+    }
+
+    public void ResetRunStats()
+    {
+        MaxHealth = 100f;
+        Health = MaxHealth;
+        FireRateMultiplier = 1f;
+        ElapsedTime = 0f;
+        HealthBar.fillAmount = 1f;
+        HealthBar.color = Color.green;
+    }
+
+    public void UpgradeHealth()
+    {
+        MaxHealth += 20f;
+        Health = Mathf.Min(Health + 20f, MaxHealth);
+    }
+
+    public void UpgradeFireRate()
+    {
+        FireRateMultiplier = Mathf.Min(FireRateMultiplier + 0.25f, MaxFireRateMultiplier);
+    }
+
+    public int GetEnemyCount()
+    {
+        return DifficultyProfile.GetEnemyCount(ElapsedTime);
+    }
+
+    public float GetEnemyHealth()
+    {
+        return DifficultyProfile.GetEnemyHealth(ElapsedTime);
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.UIElements;
 using static UnityEngine.RuleTile.TilingRuleOutput;
+using SurvivorIO.UpgradeFlow;
 
 public class PlayerManager : MonoBehaviour
 {
@@ -27,6 +28,7 @@ public class PlayerManager : MonoBehaviour
 
     [Header("Boolean manager")]
     internal bool Deaths = true;
+    private readonly CombatCooldown ContactCooldown = new CombatCooldown();
 
 
     void Start()
@@ -42,7 +44,7 @@ public class PlayerManager : MonoBehaviour
             HitBolts();
         }
         
-        if(Manager.HealthBar.fillAmount == 0)
+        if(Manager.Health <= 0f)
         {
             Death.SetActive(true);
         }
@@ -67,9 +69,19 @@ public class PlayerManager : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
+        ApplyEnemyContactDamage(other);
+    }
+
+    private void OnTriggerStay2D(Collider2D other)
+    {
+        ApplyEnemyContactDamage(other);
+    }
+
+    private void ApplyEnemyContactDamage(Collider2D other)
+    {
         if (Bool.GameStart == true)
         {
-            if (other.CompareTag("Enemy"))
+            if (other.CompareTag("Enemy") && ContactCooldown.TryHit(Time.time, 0.5f))
             {
                 AudioHeat.Play();
                 Manager.Health -= 0.5f;

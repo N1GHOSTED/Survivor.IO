@@ -30,40 +30,53 @@ public class SpawenManager : MonoBehaviour
 
     void OnEnable()
     {
-        StartCoroutine(SpaweningManager());
-        StartCoroutine(stopSpawning());
+        MakeIt = true;
+        StopAllCoroutines();
+        StartCoroutine(SpawnRoutine());
+    }
+    void OnDisable()
+    {
+        MakeIt = false;
+        StopAllCoroutines();
     }
     void Update()
     {
 
             MakeIt = true;
     }
-    public  IEnumerator stopSpawning()
+    public IEnumerator stopSpawning()
     {
-        yield return new WaitForEndOfFrame();
-        if(MakeIt == true)
-        {
-            yield return new WaitForSeconds(1f);
-            ManagerPose = true;
-            yield return new WaitForSeconds(10f);
-            ManagerPose = false;
-            StartCoroutine(SpaweningManager());
-        }
-        StartCoroutine(stopSpawning());
+        yield break;
     }
 
     public IEnumerator SpaweningManager()
     {
-        yield return new WaitForEndOfFrame();
-        if (ManagerPose == false)
+        yield break;
+    }
+
+    IEnumerator SpawnRoutine()
+    {
+        while (MakeIt && Managers != null && Zombie != null)
         {
-            if(MakeIt == true)
+            if (!ManagerPose)
             {
-                (Instantiate(Zombie, new Vector3(Spawen1.transform.position.x, Spawen1.transform.position.y + Random.Range(-5, 5), Spawen1.transform.position.z), Spawen1.transform.rotation) as GameObject).transform.SetParent(SpawenLocalisation.transform);
-                (Instantiate(Zombie, new Vector3(Spawen2.transform.position.x + Random.Range(-5, 5), Spawen2.transform.position.y, Spawen2.transform.position.z), Spawen2.transform.rotation) as GameObject).transform.SetParent(SpawenLocalisation.transform);
-                yield return new WaitForSeconds(0.9f);
+                int count = Managers.GetEnemyCount();
+                for (int index = 0; index < count; index++)
+                {
+                    GameObject point = index % 2 == 0 ? Spawen1 : Spawen2;
+                    if (point == null || SpawenLocalisation == null)
+                    {
+                        continue;
+                    }
+
+                    Vector3 position = point.transform.position;
+                    position.x += Random.Range(-5f, 5f);
+                    position.y += Random.Range(-5f, 5f);
+                    GameObject enemy = Instantiate(Zombie, position, point.transform.rotation);
+                    enemy.transform.SetParent(SpawenLocalisation.transform);
+                }
             }
-            StartCoroutine(SpaweningManager());
+            yield return new WaitForSeconds(0.9f);
         }
     }
 }

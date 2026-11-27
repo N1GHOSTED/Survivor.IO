@@ -6,7 +6,7 @@ using TMPro;
 public class TimerManager : MonoBehaviour
 {
 
-    public float timeRemaining = 10;
+    public float timeRemaining = 0;
     public bool timerIsRunning = false;
     public Text timeText;
     public Text timeTextScreenFinish;
@@ -22,7 +22,7 @@ public class TimerManager : MonoBehaviour
         BestTime.text = timeText.text;
         if (timerIsRunning)
         {
-            if (timeRemaining > -1)
+            if (timeRemaining >= 0)
             {
                 timeRemaining += Time.deltaTime;
                 DisplayTime(timeRemaining);
@@ -37,7 +37,6 @@ public class TimerManager : MonoBehaviour
     }
     void DisplayTime(float timeToDisplay)
     {
-        timeToDisplay += 1;
         float minutes = Mathf.FloorToInt(timeToDisplay / 60);
         float seconds = Mathf.FloorToInt(timeToDisplay % 60);
         timeText.text = string.Format("{0:00}:{1:00}", minutes, seconds);

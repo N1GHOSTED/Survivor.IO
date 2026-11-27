@@ -2,7 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using UnityEngine;
+using UnityEngine.Events;
 using TMPro;
+using SurvivorIO.UpgradeFlow;
 
 public class ManagerWeapons : MonoBehaviour
 {
@@ -27,6 +29,7 @@ public class ManagerWeapons : MonoBehaviour
     public Image IconOne;
     public Image IconTwo;
     public Image IconThree;
+    public Sprite HealthIcon;
 
     [Header("Description")]
     public TextMeshProUGUI DescriptionOne;
@@ -57,6 +60,12 @@ public class ManagerWeapons : MonoBehaviour
     [Header("Boolean Manager")]
     internal bool ActivateWeapon = true;
 
+    private const int HealthOption = 13;
+    private const int RapidFireOption = 14;
+    private static readonly System.Random OfferRandom = new System.Random();
+    private readonly System.Collections.Generic.Dictionary<Button, UnityAction> RuntimeListeners =
+        new System.Collections.Generic.Dictionary<Button, UnityAction>();
+
     void Start()
     {
 
@@ -67,15 +76,73 @@ public class ManagerWeapons : MonoBehaviour
         {
             if(FillingScore.ScoringLevel.fillAmount == 1)
             {
-                PauseFirst = Random.Range(1, 12);
-                PauseSecond = Random.Range(1, 12);
-                PauseThrees = Random.Range(1, 12);
-                PauseOne();
-                PauseTwo();
-                PauseThree();
-                ActivateWeapon = false;
+                GenerateOffers();
             }
         }
+    }
+    void GenerateOffers()
+    {
+        List<int> available = new List<int>();
+        for (int option = 1; option <= 12; option++)
+        {
+            if (!WeaponsManager.IsWeaponUnlocked(option))
+            {
+                available.Add(option);
+            }
+        }
+        available.Add(HealthOption);
+        if (FillingScore.FireRateMultiplier < GameManager.MaxFireRateMultiplier)
+        {
+            available.Add(RapidFireOption);
+        }
+
+        ClearButtonListeners();
+        List<int> offers = UpgradeOfferSelector.SelectDistinct(available, 3, OfferRandom);
+        FirstBtn.SetActive(offers.Count > 0);
+        SecondBtn.SetActive(offers.Count > 1);
+        ThirdBtn.SetActive(offers.Count > 2);
+
+        PauseFirst = offers.Count > 0 ? offers[0] : 0;
+        PauseSecond = offers.Count > 1 ? offers[1] : 0;
+        PauseThrees = offers.Count > 2 ? offers[2] : 0;
+        if (offers.Count > 0)
+        {
+            PauseOne();
+        }
+        if (offers.Count > 1)
+        {
+            PauseTwo();
+        }
+        if (offers.Count > 2)
+        {
+            PauseThree();
+        }
+        ActivateWeapon = false;
+    }
+
+    void ClearButtonListeners()
+    {
+        RemoveRuntimeListener(FirstBtn);
+        RemoveRuntimeListener(SecondBtn);
+        RemoveRuntimeListener(ThirdBtn);
+    }
+
+    void RemoveRuntimeListener(GameObject buttonObject)
+    {
+        Button button = buttonObject.GetComponent<Button>();
+        if (RuntimeListeners.TryGetValue(button, out UnityAction listener))
+        {
+            button.onClick.RemoveListener(listener);
+            RuntimeListeners.Remove(button);
+        }
+    }
+
+    void AddRuntimeListener(GameObject buttonObject, UnityAction listener)
+    {
+        Button button = buttonObject.GetComponent<Button>();
+        RemoveRuntimeListener(buttonObject);
+        button.onClick.AddListener(listener);
+        RuntimeListeners[button] = listener;
     }
     void PauseOne()
     {
@@ -93,53 +160,61 @@ public class ManagerWeapons : MonoBehaviour
     /////////
     void ManagerThirdPlace()
     {
-        if (PauseSecond == 1)
+        if (PauseThrees == 1)
         {
             AguelThree();
         }
-        if (PauseSecond == 2)
+        if (PauseThrees == 2)
         {
             BallThree();
         }
-        if (PauseSecond == 3)
+        if (PauseThrees == 3)
         {
             BrikThree();
         }
-        if (PauseSecond == 4)
+        if (PauseThrees == 4)
         {
             DroneAThree();
         }
-        if (PauseSecond == 5)
+        if (PauseThrees == 5)
         {
             DroneBThree();
         }
-        if (PauseSecond == 6)
+        if (PauseThrees == 6)
         {
             DroneCThree();
         }
-        if (PauseSecond == 7)
+        if (PauseThrees == 7)
         {
             FireGaseThree();
         }
-        if (PauseSecond == 8)
+        if (PauseThrees == 8)
         {
             FireShanShonThree();
         }
-        if (PauseSecond == 9)
+        if (PauseThrees == 9)
         {
             GunThree();
         }
-        if (PauseSecond == 10)
+        if (PauseThrees == 10)
         {
             ProtecteurThree();
         }
-        if (PauseSecond == 11)
+        if (PauseThrees == 11)
         {
             SprineAThree();
         }
-        if (PauseSecond == 12)
+        if (PauseThrees == 12)
         {
             SprineBThree();
+        }
+        if (PauseThrees == HealthOption)
+        {
+            HealthThree();
+        }
+        if (PauseThrees == RapidFireOption)
+        {
+            RapidFireThree();
         }
     }
     void ManagerSecondPlace()
@@ -192,6 +267,14 @@ public class ManagerWeapons : MonoBehaviour
         {
             SprineBTwo();
         }
+        if (PauseSecond == HealthOption)
+        {
+            HealthTwo();
+        }
+        if (PauseSecond == RapidFireOption)
+        {
+            RapidFireTwo();
+        }
     }
     void ManagerFirstPlace()
     {
@@ -243,6 +326,14 @@ public class ManagerWeapons : MonoBehaviour
         {
             SprineBOne();
         }
+        if (PauseFirst == HealthOption)
+        {
+            HealthOne();
+        }
+        if (PauseFirst == RapidFireOption)
+        {
+            RapidFireOne();
+        }
     }
     /// <summary>
     /// ///////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -255,9 +346,7 @@ public class ManagerWeapons : MonoBehaviour
     IEnumerator FinishingCleaning()
     {
         yield return new WaitForSeconds(1f);
-        FirstBtn.GetComponent<Button>().onClick.RemoveAllListeners();
-        SecondBtn.GetComponent<Button>().onClick.RemoveAllListeners();
-        ThirdBtn.GetComponent<Button>().onClick.RemoveAllListeners();
+        ClearButtonListeners();
     }
     /////////////
     void AguelOne()
@@ -265,21 +354,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.Naguel;
         DescriptionOne.text = WeaponsManager.DAguel;
         IconOne.sprite = WeaponsManager.SAguel;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.Onaguel);
+        AddRuntimeListener(FirstBtn, WeaponsManager.Onaguel);
     }
     void AguelTwo()
     {
         NameTwo.text = WeaponsManager.Naguel;
         DescriptionTwo.text = WeaponsManager.DAguel;
         IconTwo.sprite = WeaponsManager.SAguel;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.Onaguel);
+        AddRuntimeListener(SecondBtn, WeaponsManager.Onaguel);
     }
     void AguelThree()
     {
         NameThree.text = WeaponsManager.Naguel;
         DescriptionThree.text = WeaponsManager.DAguel;
         IconThree.sprite = WeaponsManager.SAguel;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.Onaguel);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.Onaguel);
     }
     /////
     void FireGaseOne()
@@ -287,21 +376,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NFireGase;
         DescriptionOne.text = WeaponsManager.DFireGase;
         IconOne.sprite = WeaponsManager.SFireGase;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnFireGase);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnFireGase);
     }
     void FireGaaseTwo()
     {
         NameTwo.text = WeaponsManager.NFireGase;
         DescriptionTwo.text = WeaponsManager.DFireGase;
         IconTwo.sprite = WeaponsManager.SFireGase;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnFireGase);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnFireGase);
     }
     void FireGaseThree()
     {
         NameThree.text = WeaponsManager.NFireGase;
         DescriptionThree.text = WeaponsManager.DFireGase;
         IconThree.sprite = WeaponsManager.SFireGase;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnFireGase);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnFireGase);
     }
     /////
     void FireShanshonOne()
@@ -309,21 +398,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NSalsaRanshon;
         DescriptionOne.text = WeaponsManager.DSalsaRanshon;
         IconOne.sprite = WeaponsManager.SSalsaRanshone;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSalsaRanshon);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnSalsaRanshon);
     }
     void FireShanshonTwo()
     {
         NameTwo.text = WeaponsManager.NSalsaRanshon;
         DescriptionTwo.text = WeaponsManager.DSalsaRanshon;
         IconTwo.sprite = WeaponsManager.SSalsaRanshone;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSalsaRanshon);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnSalsaRanshon);
     }
     void FireShanShonThree()
     {
         NameThree.text = WeaponsManager.NSalsaRanshon;
         DescriptionThree.text = WeaponsManager.DSalsaRanshon;
         IconThree.sprite = WeaponsManager.SSalsaRanshone;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSalsaRanshon);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnSalsaRanshon);
     }
     ////
     void BallOne()
@@ -331,21 +420,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NBall;
         DescriptionOne.text = WeaponsManager.DBall;
         IconOne.sprite = WeaponsManager.SBall;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnBall);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnBall);
     }
     void BallTwo()
     {
         NameTwo.text = WeaponsManager.NBall;
         DescriptionTwo.text = WeaponsManager.DBall;
         IconTwo.sprite = WeaponsManager.SBall;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnBall);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnBall);
     }
     void BallThree()
     {
         NameThree.text = WeaponsManager.NBall;
         DescriptionThree.text = WeaponsManager.DBall;
         IconThree.sprite = WeaponsManager.SBall;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnBall);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnBall);
     }
     //////
     void SprineBOne()
@@ -353,21 +442,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NSprineB;
         DescriptionOne.text = WeaponsManager.DSprineB;
         IconOne.sprite = WeaponsManager.SSprineB;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSprineB);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnSprineB);
     }
     void SprineBTwo()
     {
         NameTwo.text = WeaponsManager.NSprineB;
         DescriptionTwo.text = WeaponsManager.DSprineB;
         IconTwo.sprite = WeaponsManager.SSprineB;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSprineB);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnSprineB);
     }
     void SprineBThree()
     {
         NameThree.text = WeaponsManager.NSprineB;
         DescriptionThree.text = WeaponsManager.DSprineB;
         IconThree.sprite = WeaponsManager.SSprineB;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSprineB);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnSprineB);
     }
     //////
     void SprineAOne()
@@ -375,21 +464,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NSprineA;
         DescriptionOne.text = WeaponsManager.DSprineA;
         IconOne.sprite = WeaponsManager.SSprineA;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSprineA);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnSprineA);
     }
     void SprineATwo()
     {
         NameTwo.text = WeaponsManager.NSprineA;
         DescriptionTwo.text = WeaponsManager.DSprineA;
         IconTwo.sprite = WeaponsManager.SSprineA;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSprineA);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnSprineA);
     }
     void SprineAThree()
     {
         NameThree.text = WeaponsManager.NSprineA;
         DescriptionThree.text = WeaponsManager.DSprineA;
         IconThree.sprite = WeaponsManager.SSprineA;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnSprineA);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnSprineA);
     }
     ////
     void GunOne()
@@ -397,21 +486,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NGun;
         DescriptionOne.text = WeaponsManager.DGun;
         IconOne.sprite = WeaponsManager.SGun;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnGun);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnGun);
     }
     void GunTwo()
     {
         NameTwo.text = WeaponsManager.NGun;
         DescriptionTwo.text = WeaponsManager.DGun;
         IconTwo.sprite = WeaponsManager.SGun;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnGun);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnGun);
     }
     void GunThree()
     {
         NameThree.text = WeaponsManager.NGun;
         DescriptionThree.text = WeaponsManager.DGun;
         IconThree.sprite = WeaponsManager.SGun;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnGun);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnGun);
     }
     ////////////
     void BrikWallOne()
@@ -419,21 +508,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NBrikeWall;
         DescriptionOne.text = WeaponsManager.DBrikWall;
         IconOne.sprite = WeaponsManager.SBrikWall;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnBrikWall);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnBrikWall);
     }
     void BrikWallTwo()
     {
         NameTwo.text = WeaponsManager.NBrikeWall;
         DescriptionTwo.text = WeaponsManager.DBrikWall;
         IconTwo.sprite = WeaponsManager.SBrikWall;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnBrikWall);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnBrikWall);
     }
     void BrikThree()
     {
         NameThree.text = WeaponsManager.NBrikeWall;
         DescriptionThree.text = WeaponsManager.DBrikWall;
         IconThree.sprite = WeaponsManager.SBrikWall;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnBrikWall);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnBrikWall);
     }
     /////////
     void DroneAOne()
@@ -441,21 +530,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NDroneA;
         DescriptionOne.text = WeaponsManager.DDroneA;
         IconOne.sprite = WeaponsManager.SDroneA;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneA);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnDroneA);
     }
     void DroneATwo()
     {
         NameTwo.text = WeaponsManager.NDroneA;
         DescriptionTwo.text = WeaponsManager.DDroneA;
         IconTwo.sprite = WeaponsManager.SDroneA;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneA);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnDroneA);
     }
     void DroneAThree()
     {
         NameThree.text = WeaponsManager.NDroneA;
         DescriptionThree.text = WeaponsManager.DDroneA;
         IconThree.sprite = WeaponsManager.SDroneA;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneA);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnDroneA);
     }
     /////////////////////
     void DroneBOne()
@@ -463,21 +552,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NDroneB;
         DescriptionOne.text = WeaponsManager.DDroneB;
         IconOne.sprite = WeaponsManager.SDroneB;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneB);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnDroneB);
     }
     void DroneBTwo()
     {
         NameTwo.text = WeaponsManager.NDroneB;
         DescriptionTwo.text = WeaponsManager.DDroneB;
-        IconTwo.sprite = WeaponsManager.SDroneA;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneB);
+        IconTwo.sprite = WeaponsManager.SDroneB;
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnDroneB);
     }
     void DroneBThree()
     {
         NameThree.text = WeaponsManager.NDroneB;
         DescriptionThree.text = WeaponsManager.DDroneB;
         IconThree.sprite = WeaponsManager.SDroneB;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneB);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnDroneB);
     }
     /////////////////////
     void DroneCOne()
@@ -485,21 +574,21 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NDroneC;
         DescriptionOne.text = WeaponsManager.DDroneC;
         IconOne.sprite = WeaponsManager.SDroneC;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneC);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnDroneC);
     }
     void DroneCTow()
     {
         NameTwo.text = WeaponsManager.NDroneC;
         DescriptionTwo.text = WeaponsManager.DDroneC;
         IconTwo.sprite = WeaponsManager.SDroneC;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneC);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnDroneC);
     }
     void DroneCThree()
     {
         NameThree.text = WeaponsManager.NDroneC;
         DescriptionThree.text = WeaponsManager.DDroneC;
         IconThree.sprite = WeaponsManager.SDroneC;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnDroneC);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnDroneC);
     }
     /////////////////////
     void ProtecteurOne()
@@ -507,20 +596,68 @@ public class ManagerWeapons : MonoBehaviour
         NameOne.text = WeaponsManager.NProtecteurGreen;
         DescriptionOne.text = WeaponsManager.DProtecteurGreen;
         IconOne.sprite = WeaponsManager.SProtecteurGreen;
-        FirstBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnProtecteurGreen);
+        AddRuntimeListener(FirstBtn, WeaponsManager.OnProtecteurGreen);
     }
     void ProtecteurTwo()
     {
         NameTwo.text = WeaponsManager.NProtecteurGreen;
         DescriptionTwo.text = WeaponsManager.DProtecteurGreen;
         IconTwo.sprite = WeaponsManager.SProtecteurGreen;
-        SecondBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnProtecteurGreen);
+        AddRuntimeListener(SecondBtn, WeaponsManager.OnProtecteurGreen);
     }
     void ProtecteurThree()
     {
         NameThree.text = WeaponsManager.NProtecteurGreen;
         DescriptionThree.text = WeaponsManager.DProtecteurGreen;
         IconThree.sprite = WeaponsManager.SProtecteurGreen;
-        ThirdBtn.GetComponent<Button>().onClick.AddListener(WeaponsManager.OnProtecteurGreen);
+        AddRuntimeListener(ThirdBtn, WeaponsManager.OnProtecteurGreen);
+    }
+
+    void HealthOne()
+    {
+        NameOne.text = "Vitality";
+        DescriptionOne.text = "Increase maximum health by 20 and recover 20 health.";
+        IconOne.sprite = HealthIcon;
+        AddRuntimeListener(FirstBtn, FillingScore.UpgradeHealth);
+    }
+
+    void HealthTwo()
+    {
+        NameTwo.text = "Vitality";
+        DescriptionTwo.text = "Increase maximum health by 20 and recover 20 health.";
+        IconTwo.sprite = HealthIcon;
+        AddRuntimeListener(SecondBtn, FillingScore.UpgradeHealth);
+    }
+
+    void HealthThree()
+    {
+        NameThree.text = "Vitality";
+        DescriptionThree.text = "Increase maximum health by 20 and recover 20 health.";
+        IconThree.sprite = HealthIcon;
+        AddRuntimeListener(ThirdBtn, FillingScore.UpgradeHealth);
+    }
+
+    void RapidFireOne()
+    {
+        NameOne.text = "Rapid Fire";
+        DescriptionOne.text = "Increase the player's firing speed by 25%.";
+        IconOne.sprite = WeaponsManager.SGun;
+        AddRuntimeListener(FirstBtn, FillingScore.UpgradeFireRate);
+    }
+
+    void RapidFireTwo()
+    {
+        NameTwo.text = "Rapid Fire";
+        DescriptionTwo.text = "Increase the player's firing speed by 25%.";
+        IconTwo.sprite = WeaponsManager.SGun;
+        AddRuntimeListener(SecondBtn, FillingScore.UpgradeFireRate);
+    }
+
+    void RapidFireThree()
+    {
+        NameThree.text = "Rapid Fire";
+        DescriptionThree.text = "Increase the player's firing speed by 25%.";
+        IconThree.sprite = WeaponsManager.SGun;
+        AddRuntimeListener(ThirdBtn, FillingScore.UpgradeFireRate);
     }
 }

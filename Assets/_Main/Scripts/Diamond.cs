@@ -13,6 +13,7 @@ public class Diamond : MonoBehaviour
     internal bool FollowPlayer = false;
     internal bool StartMove = true;
     internal bool AddOnce = true;
+    private bool IsCollected;
 
     void Start()
     {
@@ -67,12 +68,13 @@ public class Diamond : MonoBehaviour
     }
     private void OnTriggerEnter2D(Collider2D other)
     {
-            if (other.CompareTag("Player"))
+            if (other.CompareTag("Player") && !IsCollected)
             {
+                IsCollected = true;
                 Manager.GetComponent<GameManager>().ValureLevel += 0.15f;
-            Instantiate(Flasher, transform.position, transform.rotation);
-            Audio.Play();
-            StartCoroutine(Destroy());
+                Instantiate(Flasher, transform.position, transform.rotation);
+                Audio.Play();
+                StartCoroutine(Destroy());
             }
             if (other.CompareTag("RoadDetections"))
             {

@@ -51,15 +51,7 @@ public class JoystickManager : MonoBehaviour
                 anim.Play("0");
             }
             AnimatorController();
-            if (joystickMovement.joystickVec.y != 0)
-            {
-                rb.velocity = new Vector2(joystickMovement.joystickVec.x * playerSpeed, joystickMovement.joystickVec.y * playerSpeed);
-
-            }
-            else
-            {
-                rb.velocity = Vector2.zero;
-            }
+            rb.velocity = joystickMovement.joystickVec * playerSpeed * joystickMovement.InputMagnitude;
         }
         if(Boolean.GameStart == false)
         {

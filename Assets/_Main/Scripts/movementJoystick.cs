@@ -16,6 +16,8 @@ public class movementJoystick : MonoBehaviour
     private Vector2 joystickTouchPos;
     private Vector2 joystickOriginalPos;
     private float joystickRadius;
+    private int ActivePointerId = -1;
+    public float InputMagnitude { get; private set; }
 
 
     void Update()
@@ -41,17 +43,38 @@ public class movementJoystick : MonoBehaviour
     }
     public void PointerDown()
     {
-        joystick.transform.position = Input.mousePosition;
-        joystickBG.transform.position = Input.mousePosition;
-        joystickTouchPos = Input.mousePosition;
+        ActivatePointer(-1, Input.mousePosition);
+    }
+    public void PointerDown(BaseEventData baseEventData)
+    {
+        PointerEventData pointerEventData = baseEventData as PointerEventData;
+        Vector2 position = pointerEventData != null ? pointerEventData.position : (Vector2)Input.mousePosition;
+        ActivatePointer(pointerEventData != null ? pointerEventData.pointerId : -1, position);
+    }
+    private void ActivatePointer(int pointerId, Vector2 position)
+    {
+        ActivePointerId = pointerId;
+        joystick.transform.position = position;
+        joystickBG.transform.position = position;
+        joystickTouchPos = position;
+        joystickVec = Vector2.zero;
+        InputMagnitude = 0f;
     }
     public void Drag(BaseEventData baseEventData)
     {
         PointerEventData pointerEventData = baseEventData as PointerEventData;
+        if (pointerEventData == null)
+        {
+            return;
+        }
+        if (ActivePointerId >= 0 && pointerEventData.pointerId != ActivePointerId)
+        {
+            return;
+        }
         Vector2 dragePos = pointerEventData.position;
-        joystickVec = (dragePos - joystickTouchPos).normalized;
-
         float joystickDist = Vector2.Distance(dragePos, joystickTouchPos);
+        joystickVec = joystickDist > 0f ? (dragePos - joystickTouchPos).normalized : Vector2.zero;
+        InputMagnitude = Mathf.Clamp01(joystickDist / joystickRadius);
         if(joystickDist < joystickRadius)
         {
             joystick.transform.position = joystickTouchPos + joystickVec * joystickDist;
@@ -63,7 +86,9 @@ public class movementJoystick : MonoBehaviour
     }
     public void PointerUp()
     {
+        ActivePointerId = -1;
         joystickVec = Vector2.zero;
+        InputMagnitude = 0f;
         joystick.transform.position = joystickOriginalPos;
         joystickBG.transform.position = joystickOriginalPos;
     }

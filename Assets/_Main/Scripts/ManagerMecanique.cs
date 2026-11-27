@@ -63,14 +63,20 @@ public class ManagerMecanique : MonoBehaviour
         {
             LevelInt += 1;
             LevelLevel = 0;
-            PlayerPrefs.SetFloat("Score", LevelLevel);
-            PlayerPrefs.SetInt("currentScore", LevelInt);
         }
         ValueLevel.text = LevelInt + "";
     }
     public void SetStart()
     {
         FlashInt += 3;
+    }
+
+    public void PersistRunProgress()
+    {
         PlayerPrefs.SetInt("flash", FlashInt);
+        PlayerPrefs.SetInt("gems", GemsInt);
+        PlayerPrefs.SetInt("coins", CoinsInt);
+        PlayerPrefs.SetFloat("Score", LevelLevel);
+        PlayerPrefs.SetInt("currentScore", LevelInt);
     }
 }
