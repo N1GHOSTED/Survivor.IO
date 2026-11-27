@@ -34,6 +34,14 @@ namespace SurvivorIO.UpgradeFlow
         }
     }
 
+    public static class SpawnCapacity
+    {
+        public static int GetSpawnCount(int currentEnemies, int requestedEnemies, int maxEnemies)
+        {
+            return Math.Max(0, Math.Min(requestedEnemies, maxEnemies - currentEnemies));
+        }
+    }
+
     public sealed class OneShotGate
     {
         private bool acquired;
